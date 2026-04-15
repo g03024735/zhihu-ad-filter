@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0084ff"/>
+      <stop offset="100%" stop-color="#00c2ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- 圆角方形背景 -->
+  <rect x="4" y="4" width="120" height="120" rx="26" ry="26" fill="url(#bg)"/>
+
+  <!-- 禁止符号（白色圆环 + 斜杠） -->
+  <g filter="url(#shadow)">
+    <circle cx="64" cy="64" r="38" fill="none" stroke="#fff" stroke-width="9"/>
+    <line x1="38" y1="90" x2="90" y2="38" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+  </g>
+
+  <!-- 中心 "告" 字（代表广告） -->
+  <text x="64" y="76"
+        text-anchor="middle"
+        font-family="'PingFang SC','Microsoft YaHei',sans-serif"
+        font-size="38"
+        font-weight="700"
+        fill="#fff"
+        opacity="0.28">告</text>
+</svg>

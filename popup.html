@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 300px;
+      font-family: -apple-system, "PingFang SC", sans-serif;
+      font-size: 13px;
+      color: #333;
+      background: #fff;
+    }
+
+    .header {
+      background: #0084ff;
+      padding: 14px 16px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header h1 { font-size: 15px; font-weight: 600; }
+    .header span { font-size: 20px; }
+
+    .body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .label { font-weight: 500; }
+    .sublabel { font-size: 11px; color: #999; margin-top: 2px; }
+
+    /* Toggle switch */
+    .toggle { position: relative; width: 40px; height: 22px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0;
+      background: #ccc; border-radius: 22px; cursor: pointer;
+      transition: .2s;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 3px; bottom: 3px;
+      background: #fff; border-radius: 50%;
+      transition: .2s;
+    }
+    input:checked + .slider { background: #0084ff; }
+    input:checked + .slider::before { transform: translateX(18px); }
+
+    /* API Key input */
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-group label { font-weight: 500; }
+    .input-row { display: flex; gap: 6px; }
+    input[type="password"], input[type="text"] {
+      flex: 1;
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      transition: border .2s;
+    }
+    input:focus { border-color: #0084ff; }
+    .btn {
+      padding: 7px 12px;
+      background: #0084ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #006fcc; }
+
+    .hint { font-size: 11px; color: #999; }
+    .hint a { color: #0084ff; text-decoration: none; }
+
+    .stats {
+      background: #f5f7fa;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .stats-num { font-size: 22px; font-weight: 700; color: #0084ff; }
+    .stats-label { font-size: 11px; color: #999; }
+
+    .saved { font-size: 11px; opacity: 0; transition: opacity .3s; }
+    .saved.show { opacity: 1; }
+    .saved.ok { color: #4caf50; }
+    .saved.err { color: #e53935; }
+    .saved.pending { color: #999; }
+
+    .btn:disabled { background: #9cc9ff; cursor: not-allowed; }
+
+    hr { border: none; border-top: 1px solid #f0f0f0; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span>🚫</span>
+    <h1>知乎软广过滤器</h1>
+  </div>
+
+  <div class="body">
+    <!-- 开关 -->
+    <div class="row">
+      <div>
+        <div class="label">启用过滤</div>
+        <div class="sublabel">自动识别并隐藏软文广告</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="toggleSwitch" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <hr />
+
+    <!-- 统计 -->
+    <div class="stats">
+      <div>
+        <div class="stats-num" id="hiddenCount">0</div>
+        <div class="stats-label">已隐藏软广数</div>
+      </div>
+      <span style="font-size:28px">🎉</span>
+    </div>
+
+    <hr />
+
+    <!-- API Key -->
+    <div class="input-group">
+      <label>智谱 API Key</label>
+      <div class="input-row">
+        <input type="password" id="apiKeyInput" placeholder="粘贴你的 API Key" />
+        <button class="btn" id="saveBtn">保存</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="hint">
+          免费申请：<a href="https://open.bigmodel.cn" target="_blank">open.bigmodel.cn</a>
+        </div>
+        <span class="saved" id="savedTip">✓ 已保存</span>
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="hint" style="text-align:center">
+      <a href="#" id="openGuide">📖 查看使用说明</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

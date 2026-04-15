@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>知乎软广过滤器 · 使用指南</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+    .wrap {
+      max-width: 760px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+    header {
+      background: linear-gradient(135deg, #0084ff, #00b3ff);
+      color: #fff;
+      padding: 36px 40px;
+    }
+    header h1 {
+      font-size: 26px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    header p {
+      margin-top: 6px;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    main { padding: 32px 40px 40px; }
+
+    section {
+      margin-bottom: 36px;
+    }
+    section:last-child { margin-bottom: 0; }
+
+    h2 {
+      font-size: 18px;
+      color: #0084ff;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #eef2f7;
+    }
+
+    p { margin-bottom: 10px; color: #444; }
+
+    ol, ul {
+      padding-left: 22px;
+      margin-bottom: 10px;
+    }
+    li { margin-bottom: 8px; }
+
+    code, .kbd {
+      background: #f1f3f5;
+      color: #d6336c;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    a {
+      color: #0084ff;
+      text-decoration: none;
+    }
+    a:hover { text-decoration: underline; }
+
+    .steps {
+      background: #f8fbff;
+      border-left: 3px solid #0084ff;
+      padding: 14px 18px 14px 36px;
+      border-radius: 4px;
+    }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 16px;
+      margin-top: 10px;
+    }
+    .badge-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #555;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      white-space: nowrap;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .note {
+      background: #fff8e1;
+      border-left: 3px solid #ffc107;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #7a6500;
+    }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      background: #f8fbff;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #555;
+    }
+    .flow span {
+      background: #fff;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid #e0e8f0;
+    }
+    .flow i { color: #0084ff; font-style: normal; }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #999;
+      font-size: 12px;
+      background: #fafbfc;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>🚫 知乎软广过滤器</h1>
+      <p>基于智谱 GLM 大模型，自动识别并隐藏知乎 Feed 中的软文广告</p>
+    </header>
+
+    <main>
+      <section>
+        <h2>① 工具能做什么</h2>
+        <ul>
+          <li>扫描知乎首页、推荐、回答列表里的每条帖子，交给大模型判断是否为软文广告（种草、带货、品牌推广）。</li>
+          <li>判定为软广的帖子会被折叠，原位置留一条黄色提示条，支持一键展开查看或重新折叠。</li>
+          <li>每条帖子右上角显示识别状态徽标，<strong>等待中 / 识别中 / 非软广 / 软广 / 已取消 / 失败</strong>，让你清楚知道插件在干嘛。</li>
+          <li>结果本地缓存，同一条帖子不会重复调用 API。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>② 实现原理</h2>
+        <div class="flow">
+          <span>页面加载 / 滚动</span><i>→</i>
+          <span>抓取 Feed 节点</span><i>→</i>
+          <span>提取标题 + 开头 200 字</span><i>→</i>
+          <span>串行调用 GLM API</span><i>→</i>
+          <span>返回 is_ad</span><i>→</i>
+          <span>折叠或放行</span>
+        </div>
+        <ul style="margin-top:12px">
+          <li><strong>Content Script</strong>：监听 DOM 变化，用 <code>MutationObserver</code> 捕获新加载的帖子。</li>
+          <li><strong>全局串行队列</strong>：一次只处理一条，避免并发请求压垮免费额度；用户划得太快、滑出视窗的帖子会自动取消。</li>
+          <li><strong>Service Worker</strong>：统一调用智谱 <code>glm-4-flash</code> 免费模型，带内存 + 本地双层缓存。</li>
+          <li><strong>Prompt</strong>：系统提示词里描述了软广的典型特征（种草、第一人称体验、品牌植入等），要求模型返回 <code>{"is_ad": true/false, "reason": "..."}</code>。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>③ 申请智谱 API Key（免费）</h2>
+        <div class="steps">
+          <ol>
+            <li>打开 <a href="https://open.bigmodel.cn" target="_blank">https://open.bigmodel.cn</a>，使用手机号 / 微信注册登录。</li>
+            <li>在控制台左侧菜单找到「API Keys」或「密钥管理」。</li>
+            <li>点「创建 API Key」，复制生成的字符串（形如 <code>xxxxxxxx.yyyyyy</code>）。</li>
+            <li>新用户会自动获得免费 Token，<code>glm-4-flash</code> 本身是完全免费的模型，够日常使用。</li>
+          </ol>
+        </div>
+        <div class="note" style="margin-top:12px">
+          💡 Key 只保存在你本地浏览器（<code>chrome.storage.sync</code>），不会上传到第三方。
+        </div>
+      </section>
+
+      <section>
+        <h2>④ 配置插件</h2>
+        <ol>
+          <li>点击 Chrome 右上角的插件图标 🚫。</li>
+          <li>把刚才复制的 API Key 粘贴到输入框，点「保存」。</li>
+          <li>插件会自动测试 Key 是否可用，通过后显示 <span style="color:#4caf50">✓ 已保存</span>。</li>
+          <li>打开 <a href="https://www.zhihu.com" target="_blank">知乎</a>，开始愉快刷帖 🎉。</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>⑤ 状态徽标说明</h2>
+        <div class="badge-grid">
+          <div class="badge-row"><span class="badge" style="background:#f5f5f5;color:#999">⏳ 等待中</span> 已入队，排队等待处理</div>
+          <div class="badge-row"><span class="badge" style="background:#e3f2fd;color:#1976d2">🔄 识别中</span> 正在请求 GLM API</div>
+          <div class="badge-row"><span class="badge" style="background:#e8f5e9;color:#388e3c">✓ 非软广</span> 正常帖子，已放行</div>
+          <div class="badge-row"><span class="badge" style="background:#fff3e0;color:#e65100">🚫 软广</span> 判定为软广，已折叠</div>
+          <div class="badge-row"><span class="badge" style="background:#fafafa;color:#bbb">⊘ 已取消</span> 你滑过去了，跳过</div>
+          <div class="badge-row"><span class="badge" style="background:#f5f5f5;color:#888">○ 未识别</span> 无可提取内容</div>
+          <div class="badge-row"><span class="badge" style="background:#ffebee;color:#c62828">⚠ 失败</span> API 或网络错误</div>
+        </div>
+      </section>
+
+      <section>
+        <h2>⑥ 常见问题</h2>
+        <ul>
+          <li><strong>会不会误判？</strong> 会。判定基于模型对标题和开头 200 字的理解，边缘案例可能判错，点提示条上的「显示」即可还原。</li>
+          <li><strong>隐私？</strong> 只把标题和摘要前 200 字发给智谱 API，不上传 cookie、账号、正文全文，也不经过任何第三方服务器。</li>
+          <li><strong>看不到效果？</strong> 打开插件看统计是否在增长；F12 打开 Console 看有无错误；检查 API Key 是否保存成功。</li>
+          <li><strong>原生广告？</strong> 本插件不处理知乎自带的「推广」标签广告，那种请用 AdBlock 类插件屏蔽。本插件专注识别伪装成正常帖子的软文。</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      祝你刷得愉快 · 如有问题欢迎反馈
+    </footer>
+  </div>
+</body>
+</html>
